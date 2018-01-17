@@ -403,10 +403,10 @@ public class PtyHelpers {
     }
 
     public static class winsize extends Structure {
-        short ws_row;
-        short ws_col;
-        short ws_xpixel;
-        short ws_ypixel;
+        public short ws_row;
+        public short ws_col;
+        public short ws_xpixel;
+        public short ws_ypixel;
 
         @Override
         protected List<String> getFieldOrder() {
