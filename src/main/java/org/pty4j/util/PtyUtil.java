@@ -54,7 +54,6 @@ public class PtyUtil {
                     }
                 }
             } else if (urlConnection instanceof FileURLConnection) {
-                FileURLConnection fileURLConnection = (FileURLConnection) url.openConnection();
                 FileUtils.copyDirectory(new File(url.getPath()), new File(pty4jPath));
             } else {
                 throw new IllegalStateException("不支持的 URLConnection 类型" + urlConnection.getClass());
