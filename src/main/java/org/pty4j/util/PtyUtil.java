@@ -2,12 +2,19 @@ package org.pty4j.util;
 
 import com.google.common.collect.Lists;
 import com.sun.jna.Platform;
-import org.pty4j.windows.WinPty;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import sun.net.www.protocol.file.FileURLConnection;
 
 import java.io.File;
-import java.net.URI;
-import java.security.CodeSource;
+import java.io.InputStream;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Enumeration;
 import java.util.Map;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * @author traff
@@ -15,51 +22,55 @@ import java.util.Map;
 public class PtyUtil {
     private static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
 
-    private final static String PTY_LIB_FOLDER = System.getenv("PTY_LIB_FOLDER");
+    private final static String PTY_LIB_FOLDER;
+
+    static {
+        final String userHome = System.getProperty("user.home");
+        final String pty4jPath = FilenameUtils.concat(userHome, ".pty4j");
+        try {
+            final String basePath = "libpty";
+            URL url = PtyUtil.class.getResource("/" + basePath);
+            URLConnection urlConnection = url.openConnection();
+            if (urlConnection instanceof JarURLConnection) {
+                JarURLConnection jarCon = (JarURLConnection) url.openConnection();
+                JarFile jarFile = jarCon.getJarFile();
+                Enumeration<JarEntry> jarEntryList = jarFile.entries();
+                while (jarEntryList.hasMoreElements()) {
+                    JarEntry entry = jarEntryList.nextElement();
+                    String name = entry.getName();
+                    if (!name.startsWith(basePath)) {
+                        continue;
+                    }
+                    String path = name.substring(name.indexOf('/') + 1, name.length());
+                    if (path.length() <= 0) {
+                        continue;
+                    }
+                    if (!entry.isDirectory()) {
+                        try (InputStream inputStream = PtyUtil.class.getClassLoader().getResourceAsStream(name)) {
+                            FileUtils.copyInputStreamToFile(inputStream, new File(FilenameUtils.concat(pty4jPath, path)));
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            } else if (urlConnection instanceof FileURLConnection) {
+                FileURLConnection fileURLConnection = (FileURLConnection) url.openConnection();
+                FileUtils.copyDirectory(new File(url.getPath()), new File(pty4jPath));
+            } else {
+                throw new IllegalStateException("不支持的 URLConnection 类型" + urlConnection.getClass());
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        PTY_LIB_FOLDER = pty4jPath;
+    }
 
     public static String[] toStringArray(Map<String, String> environment) {
         if (environment == null) return new String[0];
         return Lists.newArrayList(environment.entrySet()).stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toArray(String[]::new);
     }
 
-    /**
-     * Returns the folder that contains a jar that contains the class
-     *
-     * @param aclass a class to find a jar
-     */
-    private static String getJarContainingFolderPath(Class aclass) throws Exception {
-        CodeSource codeSource = aclass.getProtectionDomain().getCodeSource();
-
-        File jarFile;
-
-        if (codeSource.getLocation() != null) {
-            jarFile = new File(codeSource.getLocation().toURI());
-        } else {
-            String path = aclass.getResource(aclass.getSimpleName() + ".class").getPath();
-
-            int startIndex = path.indexOf(":") + 1;
-            int endIndex = path.indexOf("!");
-            if (startIndex == -1 || endIndex == -1) {
-                throw new IllegalStateException("Class " + aclass.getSimpleName() + " is located not within a jar: " + path);
-            }
-            String jarFilePath = path.substring(startIndex, endIndex);
-            jarFilePath = new URI(jarFilePath).getPath();
-            jarFile = new File(jarFilePath);
-        }
-        return jarFile.getParentFile().getAbsolutePath();
-    }
-
-    private static String getPtyLibFolderPath() throws Exception {
-        if (PTY_LIB_FOLDER != null) {
-            return PTY_LIB_FOLDER;
-        }
-        //Class aclass = WinPty.class.getClassLoader().loadClass("com.jediterm.pty.PtyMain");
-        Class aclass = WinPty.class;
-
-        return getJarContainingFolderPath(aclass);
-    }
-
-    public static File resolveNativeLibrary() throws Exception {
+    public static File resolveNativeLibrary() {
         String libFolderPath = getPtyLibFolderPath();
 
         if (libFolderPath != null) {
@@ -70,8 +81,7 @@ public class PtyUtil {
             lib = lib.exists() ? lib : resolveNativeLibrary(new File(libFolder, "libpty"));
 
             if (!lib.exists()) {
-                throw new IllegalStateException(String.format("Couldn't find %s, jar folder %s", lib.getName(),
-                        libFolder.getAbsolutePath()));
+                throw new IllegalStateException(String.format("Couldn't find %s, jar folder %s", lib.getName(), libFolder.getAbsolutePath()));
             }
 
             return lib;
@@ -80,22 +90,44 @@ public class PtyUtil {
         }
     }
 
-    private static File resolveNativeLibrary(File parent) {
-        return resolveNativeFile(parent, getNativeLibraryName());
-    }
 
-    public static File resolveNativeFile(String fileName) throws Exception {
+    /**
+     * 得到当前系统环境对应的平台库文件路径
+     *
+     * @param fileName 文件名
+     */
+    public static File resolveNativeFile(String fileName) {
         File libFolder = new File(getPtyLibFolderPath());
         File file = resolveNativeFile(libFolder, fileName);
         return file.exists() ? file : resolveNativeFile(new File(libFolder, "libpty"), fileName);
     }
 
+    /**
+     * 得到当前系统环境对应的平台库文件的 基本路径
+     */
+    private static String getPtyLibFolderPath() {
+        return PTY_LIB_FOLDER;
+    }
+
+    /**
+     * 得到当前系统环境对应的平台库文件路径
+     *
+     * @param parent 基本路径 ..../libpty
+     */
+    private static File resolveNativeLibrary(File parent) {
+        return resolveNativeFile(parent, getNativeLibraryName());
+    }
+
+    /**
+     * 得到当前系统环境对应的平台库文件路径
+     *
+     * @param parent   基本路径 ..../libpty
+     * @param fileName 文件名
+     */
     private static File resolveNativeFile(File parent, String fileName) {
         final File path = new File(parent, getPlatformFolder());
-
         String arch = Platform.is64Bit() ? "x86_64" : "x86";
         String prefix = isWinXp() ? "xp" : arch;
-
         if (new File(parent, prefix).exists()) {
             return new File(new File(parent, prefix), fileName);
         } else {
@@ -103,9 +135,11 @@ public class PtyUtil {
         }
     }
 
+    /**
+     * 得到当前系统环境对应的平台库文件所在文件夹的文件夹名
+     */
     private static String getPlatformFolder() {
         String result;
-
         if (Platform.isMac()) {
             result = "macosx";
         } else if (Platform.isWindows()) {
@@ -119,13 +153,14 @@ public class PtyUtil {
         } else {
             throw new IllegalStateException("Platform " + Platform.getOSType() + " is not supported");
         }
-
         return result;
     }
 
+    /**
+     * 得到当前系统环境对应的平台库文件名称
+     */
     private static String getNativeLibraryName() {
         String result;
-
         if (Platform.isMac()) {
             result = "libpty.dylib";
         } else if (Platform.isWindows()) {
@@ -135,10 +170,12 @@ public class PtyUtil {
         } else {
             throw new IllegalStateException("Platform " + Platform.getOSType() + " is not supported");
         }
-
         return result;
     }
 
+    /**
+     * 是否是WinXP系统
+     */
     private static boolean isWinXp() {
         return Platform.isWindows() && (OS_VERSION.equals("5.1") || OS_VERSION.equals("5.2"));
     }

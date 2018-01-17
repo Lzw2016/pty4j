@@ -67,13 +67,11 @@ public abstract class PtyProcess extends Process {
         return new UnixPtyProcess(command, environment, workingDirectory, new Pty(console), console ? new Pty() : null);
     }
 
-    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console)
-            throws IOException {
+    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console) throws IOException {
         return exec(command, environment, workingDirectory, console, false, null);
     }
 
-    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console, boolean cygwin,
-                                  File logFile) throws IOException {
+    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console, boolean cygwin, File logFile) throws IOException {
         if (Platform.isWindows()) {
             if (environment == null) {
                 environment = new TreeMap<>();
