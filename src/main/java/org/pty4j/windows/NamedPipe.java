@@ -14,7 +14,7 @@ import static org.pty4j.windows.WinPty.KERNEL32;
 
 public class NamedPipe {
     private WinNT.HANDLE myHandle;
-    boolean myCloseHandleOnFinalize;
+    private boolean myCloseHandleOnFinalize;
 
     private WinNT.HANDLE shutdownEvent;
     private volatile boolean shutdownFlag = false;
@@ -44,7 +44,7 @@ public class NamedPipe {
      * do not own the handle, call markClosed instead of close, or call the Win32
      * DuplicateHandle API to get a new handle.
      */
-    public NamedPipe(WinNT.HANDLE handle, boolean closeHandleOnFinalize) {
+    NamedPipe(WinNT.HANDLE handle, boolean closeHandleOnFinalize) {
         myHandle = handle;
         myCloseHandleOnFinalize = closeHandleOnFinalize;
         shutdownEvent = Kernel32.INSTANCE.CreateEvent(null, true, false, null);

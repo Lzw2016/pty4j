@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2002, 2010 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -39,7 +39,7 @@ public class Pty {
         if (System.getProperty("os.name").toLowerCase(Locale.US).startsWith("mac")) {
             String version = System.getProperty("os.version").toLowerCase(Locale.US);
             String[] strings = version.split("\\.");
-            if (strings.length > 1 && strings[0].equals("10") && Integer.valueOf(strings[1]) <= 6) return true;
+            return strings.length > 1 && strings[0].equals("10") && Integer.valueOf(strings[1]) <= 6;
         }
         return false;
     }
@@ -249,7 +249,7 @@ public class Pty {
         super.finalize();
     }
 
-    private int close0(int fd) throws IOException {
+    private int close0(int fd) {
         int ret = JTermios.close(fd);
 
         breakRead();
@@ -293,19 +293,19 @@ public class Pty {
         return status[0];
     }
 
-    static int WEXITSTATUS(int status) {
+    private static int WEXITSTATUS(int status) {
         return (status >> 8) & 0x000000ff;
     }
 
-    static boolean WIFEXITED(int status) {
+    private static boolean WIFEXITED(int status) {
         return _WSTATUS(status) == 0;
     }
 
     private static int _WSTATUS(int status) {
-        return status & 0177;
+        return status & 127;
     }
 
-    int read(byte[] buf, int len) throws IOException {
+    int read(byte[] buf, int len) {
         int fd = myMaster;
         if (fd == -1) return -1;
 
@@ -341,8 +341,7 @@ public class Pty {
         return JTermios.FD_ISSET(fd, set);
     }
 
-    int write(byte[] buf, int len) throws IOException {
+    int write(byte[] buf, int len) {
         return JTermios.write(myMaster, buf, len);
     }
-
 }

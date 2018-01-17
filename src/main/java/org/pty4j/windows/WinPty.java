@@ -25,7 +25,7 @@ import static com.sun.jna.platform.win32.WinNT.GENERIC_WRITE;
 public class WinPty {
     private Pointer myWinpty;
 
-    private WinNT.HANDLE myProcess = null;
+    private WinNT.HANDLE myProcess;
     private NamedPipe myConinPipe;
     private NamedPipe myConoutPipe;
     private NamedPipe myConerrPipe;
@@ -34,9 +34,9 @@ public class WinPty {
     private int myStatus = -1;
     private boolean myClosed = false;
 
-    private int openInputStreamCount = 0;
+    private int openInputStreamCount;
 
-    public WinPty(String cmdline, String cwd, String env, boolean consoleMode) throws PtyException, IOException {
+    WinPty(String cmdline, String cwd, String env, boolean consoleMode) throws PtyException, IOException {
         int cols = Integer.getInteger("win.pty.cols", 80);
         int rows = Integer.getInteger("win.pty.rows", 25);
 
@@ -131,6 +131,7 @@ public class WinPty {
                 pipe.close();
             }
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -253,7 +254,7 @@ public class WinPty {
         }
     }
 
-    public static final Kern32 KERNEL32 = (Kern32) Native.loadLibrary("kernel32", Kern32.class);
+    static final Kern32 KERNEL32 = (Kern32) Native.loadLibrary("kernel32", Kern32.class);
 
     interface Kern32 extends Library {
         boolean PeekNamedPipe(WinNT.HANDLE hFile,
@@ -293,7 +294,7 @@ public class WinPty {
         int GetCurrentProcessId();
     }
 
-    public static WinPtyLib INSTANCE = (WinPtyLib) Native.loadLibrary(getLibraryPath(), WinPtyLib.class);
+    private static WinPtyLib INSTANCE = (WinPtyLib) Native.loadLibrary(getLibraryPath(), WinPtyLib.class);
 
     private static String getLibraryPath() {
         try {

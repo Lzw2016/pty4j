@@ -55,7 +55,7 @@ public class WinPtyProcess extends PtyProcess {
         }
     }
 
-    static String joinCmdArgs(String[] commands) {
+    private static String joinCmdArgs(String[] commands) {
         StringBuilder cmd = new StringBuilder();
         boolean flag = false;
         for (String s : commands) {
@@ -95,7 +95,7 @@ public class WinPtyProcess extends PtyProcess {
     }
 
     @Override
-    public WinSize getWinSize() throws IOException {
+    public WinSize getWinSize() {
         return null; //TODO
     }
 
@@ -145,18 +145,21 @@ public class WinPtyProcess extends PtyProcess {
             try {
                 myInputStream.close();
             } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         if (!myUsedOutputStream) {
             try {
                 myOutputStream.close();
             } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         if (!myUsedErrorStream) {
             try {
                 myErrorStream.close();
             } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

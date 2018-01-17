@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2000, 2011 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -14,12 +14,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+@SuppressWarnings("WeakerAccess")
 public class UnixPtyProcess extends PtyProcess {
-    public int NOOP = 0;
-    public int SIGHUP = 1;
-    public int SIGINT = 2;
-    public int SIGKILL = 9;
-    public int SIGTERM = 15;
+    public final int NOOP = 0;
+    public final int SIGHUP = 1;
+    public final int SIGINT = 2;
+    public final int SIGKILL = 9;
+    public final int SIGTERM = 15;
 
     /**
      * On Windows, what this does is far from easy to explain. Some of the logic is in the JNI code, some in the
@@ -38,7 +39,7 @@ public class UnixPtyProcess extends PtyProcess {
      * <p/>
      * On non-Windows, raising this just raises a POSIX SIGINT
      */
-    public int INT = 2;
+    public final int INT = 2;
 
     /**
      * A fabricated signal number for use on Windows only. Tells the starter program to send a CTRL-C regardless of
@@ -46,7 +47,7 @@ public class UnixPtyProcess extends PtyProcess {
      *
      * @since 5.2
      */
-    public int CTRLC = 1000; // arbitrary high number to avoid collision
+    public final int CTRLC = 1000; // arbitrary high number to avoid collision
 
     private int pid = 0;
     private int myStatus;
@@ -131,7 +132,6 @@ public class UnixPtyProcess extends PtyProcess {
         while (!isDone) {
             wait();
         }
-
         return myStatus;
     }
 
@@ -164,6 +164,7 @@ public class UnixPtyProcess extends PtyProcess {
             try {
                 wait(1000);
             } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
         if (!isDone) {
@@ -171,7 +172,7 @@ public class UnixPtyProcess extends PtyProcess {
         }
     }
 
-    public int interrupt() {
+    private int interrupt() {
         return Pty.raise(pid, INT);
     }
 
@@ -186,11 +187,11 @@ public class UnixPtyProcess extends PtyProcess {
         return Pty.raise(pid, SIGHUP);
     }
 
-    public int kill() {
+    private int kill() {
         return Pty.raise(pid, SIGKILL);
     }
 
-    public int terminate() {
+    private int terminate() {
         return Pty.raise(pid, SIGTERM);
     }
 
@@ -260,23 +261,25 @@ public class UnixPtyProcess extends PtyProcess {
                 getErrorStream().close();
             }
         } catch (IOException e) {
+            e.printStackTrace();
         }
         try {
             if (null == in) {
                 getInputStream().close();
             }
         } catch (IOException e) {
+            e.printStackTrace();
         }
         try {
             if (null == out) {
                 getOutputStream().close();
             }
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    int exec(String[] cmd, String[] envp, String dirname, String slaveName, int masterFD,
-             String errSlaveName, int errMasterFD, boolean console) throws IOException {
+    private int exec(String[] cmd, String[] envp, String dirname, String slaveName, int masterFD, String errSlaveName, int errMasterFD, boolean console) {
         int pid = -1;
 
         if (cmd == null) {
@@ -290,7 +293,7 @@ public class UnixPtyProcess extends PtyProcess {
         return PtyHelpers.execPty(cmd[0], cmd, envp, dirname, slaveName, masterFD, errSlaveName, errMasterFD, console);
     }
 
-    int waitFor(int processID) {
+    private int waitFor(int processID) {
         return Pty.wait0(processID);
     }
 
@@ -324,8 +327,8 @@ public class UnixPtyProcess extends PtyProcess {
         private boolean myConsole;
         volatile Throwable myException;
 
-        public Reaper(String[] command, String[] environment, String workingDirectory, String slaveName, int masterFD, String errSlaveName,
-                      int errMasterFD, boolean console) {
+        Reaper(String[] command, String[] environment, String workingDirectory, String slaveName, int masterFD, String errSlaveName,
+               int errMasterFD, boolean console) {
             super("PtyProcess Reaper");
             myCommand = command;
             myEnv = environment;
@@ -338,7 +341,7 @@ public class UnixPtyProcess extends PtyProcess {
             myException = null;
         }
 
-        int execute(String[] cmd, String[] env, String dir) throws IOException {
+        int execute(String[] cmd, String[] env, String dir) {
             return exec(cmd, env, dir, mySlaveName, myMasterFD, myErrSlaveName, myErrMasterFD, myConsole);
         }
 
@@ -366,7 +369,7 @@ public class UnixPtyProcess extends PtyProcess {
             }
         }
 
-        public String getErrorMessage() {
+        String getErrorMessage() {
             return myException != null ? myException.getMessage() : "Unknown reason";
         }
     }

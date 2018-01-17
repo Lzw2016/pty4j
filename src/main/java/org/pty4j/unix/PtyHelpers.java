@@ -41,13 +41,14 @@ import java.util.List;
  * Provides access to the pseudoterminal functionality on POSIX(-like) systems,
  * emulating such system calls on non POSIX systems.
  */
+@SuppressWarnings("WeakerAccess")
 public class PtyHelpers {
     private static final Logger LOG = LoggerFactory.getLogger(PtyHelpers.class);
 
     /**
      * Provides a OS-specific interface to the PtyHelpers methods.
      */
-    public static interface OSFacade {
+    public interface OSFacade {
         /**
          * Transforms the calling process into a new process.
          *
@@ -238,8 +239,8 @@ public class PtyHelpers {
     public static Termios createTermios() {
         Termios term = new Termios();
 
-        boolean isUTF8 = true;
-        term.c_iflag = JTermios.ICRNL | JTermios.IXON | JTermios.IXANY | IMAXBEL | JTermios.BRKINT | (isUTF8 ? IUTF8 : 0);
+//        boolean isUTF8 = true;
+        term.c_iflag = JTermios.ICRNL | JTermios.IXON | JTermios.IXANY | IMAXBEL | JTermios.BRKINT | IUTF8;
         term.c_oflag = JTermios.OPOST | ONLCR;
         term.c_cflag = JTermios.CREAD | JTermios.CS8 | HUPCL;
         term.c_lflag = JTermios.ICANON | JTermios.ISIG | JTermios.IEXTEN | JTermios.ECHO | JTermios.ECHOE | ECHOK | ECHOKE | ECHOCTL;
@@ -334,7 +335,7 @@ public class PtyHelpers {
      *                stored;
      * @param options the bit mask with options.
      */
-    public static int waitpid(int pid, int[] stat, int options) {
+    private static int waitpid(int pid, int[] stat, int options) {
         return myOsFacade.waitpid(pid, stat, options);
     }
 
@@ -402,13 +403,13 @@ public class PtyHelpers {
     }
 
     public static class winsize extends Structure {
-        public short ws_row;
-        public short ws_col;
-        public short ws_xpixel;
-        public short ws_ypixel;
+        short ws_row;
+        short ws_col;
+        short ws_xpixel;
+        short ws_ypixel;
 
         @Override
-        protected List getFieldOrder() {
+        protected List<String> getFieldOrder() {
             return Lists.newArrayList("ws_row", "ws_col", "ws_xpixel", "ws_ypixel");
         }
 

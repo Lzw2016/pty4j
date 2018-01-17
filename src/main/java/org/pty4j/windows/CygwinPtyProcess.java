@@ -93,20 +93,16 @@ public class CygwinPtyProcess extends PtyProcess {
             throw e;
         }
 
-        new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        process.waitFor();
-                        break;
-                    } catch (InterruptedException ignore) {
-                    }
+        new Thread(() -> {
+            while (true) {
+                try {
+                    process.waitFor();
+                    break;
+                } catch (InterruptedException ignore) {
                 }
-
-                closeHandles();
             }
-        }.start();
+            closeHandles();
+        }).start();
 
         return process;
     }
@@ -157,7 +153,7 @@ public class CygwinPtyProcess extends PtyProcess {
     }
 
     @Override
-    public WinSize getWinSize() throws IOException {
+    public WinSize getWinSize() {
         throw new RuntimeException("Not implemented");
     }
 
@@ -182,7 +178,7 @@ public class CygwinPtyProcess extends PtyProcess {
         if (myErrorPipe == null) {
             return new InputStream() {
                 @Override
-                public int read() throws IOException {
+                public int read() {
                     return -1;
                 }
             };

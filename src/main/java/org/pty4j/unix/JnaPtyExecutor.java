@@ -11,8 +11,7 @@ public class JnaPtyExecutor implements PtyExecutor {
     private static final int STDERR_FILENO = 2;
 
     @Override
-    public int execPty(String full_path, String[] argv, String[] envp,
-                       String dirpath, String pts_name, int fdm, String err_pts_name, int err_fdm, boolean console) {
+    public int execPty(String full_path, String[] argv, String[] envp, String dirpath, String pts_name, int fdm, String err_pts_name, int err_fdm, boolean console) {
         int childpid;
 
         PtyHelpers.OSFacade m_jpty = PtyHelpers.getInstance();
@@ -90,18 +89,17 @@ public class JnaPtyExecutor implements PtyExecutor {
             }
 
             System.exit(127);
-        } else if (childpid != 0) { /* parent */
+        } else { /* parent */
             if (console) {
                 Pty.setNoEcho(fdm);
             }
-
             return childpid;
         }
-
-        return -1;                  /*NOT REACHED */
+        return -1;
+        /*NOT REACHED */
     }
 
-    public static int ptySlaveOpen(int fdm, String pts_name) {
+    private static int ptySlaveOpen(int fdm, String pts_name) {
         int fds = JTermios.open(pts_name, JTermios.O_RDWR);
         if (fds < 0) {
             JTermios.close(fdm);

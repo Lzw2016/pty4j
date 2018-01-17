@@ -125,16 +125,15 @@ public class OSFacadeImpl implements PtyHelpers.OSFacade {
         return m_Clib.execve(command, argvp, envp);
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public int getWinSize(int fd, WinSize winSize) {
         int r;
-
         PtyHelpers.winsize ws = new PtyHelpers.winsize();
         if ((r = m_Clib.ioctl(fd, new NativeLong(TIOCGWINSZ), ws)) < 0) {
             return r;
         }
         ws.update(winSize);
-
         return r;
     }
 

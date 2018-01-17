@@ -20,7 +20,7 @@ public class Pair<A, B> {
     public final B second;
 
     public static <A, B> Pair<A, B> create(A first, B second) {
-        return new Pair<A, B>(first, second);
+        return new Pair<>(first, second);
     }
 
     public static <T> T getFirst(Pair<T, ?> pair) {
@@ -39,7 +39,7 @@ public class Pair<A, B> {
         return EMPTY;
     }
 
-    public Pair(A first, B second) {
+    private Pair(A first, B second) {
         this.first = first;
         this.second = second;
     }
@@ -59,10 +59,7 @@ public class Pair<A, B> {
 
         Pair pair = (Pair) o;
 
-        if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
-        if (second != null ? !second.equals(pair.second) : pair.second != null) return false;
-
-        return true;
+        return (first != null ? first.equals(pair.first) : pair.first == null) && (second != null ? second.equals(pair.second) : pair.second == null);
     }
 
     public int hashCode() {

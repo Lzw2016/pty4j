@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2000, 2011 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -15,17 +15,15 @@ public class CygwinPTYInputStream extends InputStream {
     private final NamedPipe myNamedPipe;
     private boolean myClosed;
 
-    public CygwinPTYInputStream(NamedPipe namedPipe) {
+    CygwinPTYInputStream(NamedPipe namedPipe) {
         myNamedPipe = namedPipe;
     }
 
     /**
      * Implementation of read for the InputStream.
-     *
-     * @throws IOException on error.
      */
     @Override
-    public int read() throws IOException {
+    public int read() {
         byte b[] = new byte[1];
         if (1 != read(b, 0, 1)) {
             return -1;
@@ -33,8 +31,9 @@ public class CygwinPTYInputStream extends InputStream {
         return b[0];
     }
 
+    @SuppressWarnings("NullableProblems")
     @Override
-    public int read(byte[] buf, int off, int len) throws IOException {
+    public int read(byte[] buf, int off, int len) {
         if (myClosed) {
             return 0;
         }
@@ -42,7 +41,7 @@ public class CygwinPTYInputStream extends InputStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         myClosed = true;
         myNamedPipe.markClosed();
     }

@@ -1,6 +1,5 @@
 package org.pty4j.util;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.sun.jna.Platform;
 import org.pty4j.windows.WinPty;
@@ -8,34 +7,27 @@ import org.pty4j.windows.WinPty;
 import java.io.File;
 import java.net.URI;
 import java.security.CodeSource;
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author traff
  */
 public class PtyUtil {
-    public static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
+    private static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
 
     private final static String PTY_LIB_FOLDER = System.getenv("PTY_LIB_FOLDER");
 
     public static String[] toStringArray(Map<String, String> environment) {
         if (environment == null) return new String[0];
-        List<String> list = Lists.transform(Lists.newArrayList(environment.entrySet()), new Function<Map.Entry<String, String>, String>() {
-            public String apply(Map.Entry<String, String> entry) {
-                return entry.getKey() + "=" + entry.getValue();
-            }
-        });
-        return list.toArray(new String[list.size()]);
+        return Lists.newArrayList(environment.entrySet()).stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toArray(String[]::new);
     }
 
     /**
      * Returns the folder that contains a jar that contains the class
      *
      * @param aclass a class to find a jar
-     * @return
      */
-    public static String getJarContainingFolderPath(Class aclass) throws Exception {
+    private static String getJarContainingFolderPath(Class aclass) throws Exception {
         CodeSource codeSource = aclass.getProtectionDomain().getCodeSource();
 
         File jarFile;
@@ -57,7 +49,7 @@ public class PtyUtil {
         return jarFile.getParentFile().getAbsolutePath();
     }
 
-    public static String getPtyLibFolderPath() throws Exception {
+    private static String getPtyLibFolderPath() throws Exception {
         if (PTY_LIB_FOLDER != null) {
             return PTY_LIB_FOLDER;
         }
@@ -88,7 +80,7 @@ public class PtyUtil {
         }
     }
 
-    public static File resolveNativeLibrary(File parent) {
+    private static File resolveNativeLibrary(File parent) {
         return resolveNativeFile(parent, getNativeLibraryName());
     }
 
@@ -98,7 +90,7 @@ public class PtyUtil {
         return file.exists() ? file : resolveNativeFile(new File(libFolder, "libpty"), fileName);
     }
 
-    public static File resolveNativeFile(File parent, String fileName) {
+    private static File resolveNativeFile(File parent, String fileName) {
         final File path = new File(parent, getPlatformFolder());
 
         String arch = Platform.is64Bit() ? "x86_64" : "x86";
@@ -147,7 +139,7 @@ public class PtyUtil {
         return result;
     }
 
-    public static boolean isWinXp() {
+    private static boolean isWinXp() {
         return Platform.isWindows() && (OS_VERSION.equals("5.1") || OS_VERSION.equals("5.2"));
     }
 }

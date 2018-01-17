@@ -32,6 +32,7 @@ import java.util.TreeMap;
  *
  * @author traff
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class PtyProcess extends Process {
     public abstract boolean isRunning();
 
@@ -75,7 +76,7 @@ public abstract class PtyProcess extends Process {
                                   File logFile) throws IOException {
         if (Platform.isWindows()) {
             if (environment == null) {
-                environment = new TreeMap<String, String>();
+                environment = new TreeMap<>();
             }
             if (cygwin) {
                 return new CygwinPtyProcess(command, environment, workingDirectory, logFile, console);
