@@ -79,7 +79,7 @@ public class Terminal {
     }
 
     public void destroy() {
-        process.destroy();
+        process.destroyForcibly();
         try {
             inputReader.close();
             errorReader.close();
