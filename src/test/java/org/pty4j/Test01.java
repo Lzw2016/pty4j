@@ -20,6 +20,16 @@ public class Test01 {
         terminal.onCommand("G:\r\n");
         terminal.onCommand("cd G:\\CodeDownloadPath\\loan-mall\r\n");
         terminal.onCommand("mvn clean package -Dmaven.test.skip=true -U --global-settings=D:\\ToolsSoftware\\Maven\\settings.xml\r\n");
+        terminal.onCommand("exit\r\n");
+        new Thread(() -> {
+            try {
+                Thread.sleep(1000 * 5);
+            } catch (InterruptedException ignored) {
+            }
+            System.out.println("关闭控制台");
+            terminal.destroy();
+        }).start();
+
         terminal.waitFor();
 
 //        StringBuilder stringBuilder = terminal.getStringBuilder();

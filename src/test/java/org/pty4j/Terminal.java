@@ -71,12 +71,20 @@ public class Terminal {
 
     public void waitFor() {
         try {
-            process.waitFor();
-            process.destroy();
+            System.out.println("退出代码: " + process.waitFor());
+            destroy();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void destroy() {
+        process.destroy();
+        try {
             inputReader.close();
             errorReader.close();
             outputWriter.close();
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
