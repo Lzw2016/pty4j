@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.pty4j</groupId>
+    <groupId>com.pty4j</groupId>
     <artifactId>pty4j</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.7.2</version>
     <name>pty4j</name>
     <packaging>jar</packaging>
 
@@ -18,6 +18,10 @@
         <repository>
             <id>sparetimelabs</id>
             <url>http://www.sparetimelabs.com/maven2/</url>
+        </repository>
+        <repository>
+            <id>my-maven-releases</id>
+            <url>http://39.108.68.132:8081/repository/maven-releases/</url>
         </repository>
     </repositories>
 
@@ -107,7 +111,7 @@
             <!--<configuration>-->
             <!--<archive>-->
             <!--<manifest>-->
-            <!--<mainClass>org.pty4j.AppMain</mainClass>-->
+            <!--<mainClass>AppMain</mainClass>-->
             <!--</manifest>-->
             <!--</archive>-->
             <!--<descriptorRefs>-->
@@ -133,7 +137,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <!--<classpathPrefix>lib/</classpathPrefix>-->
-                            <mainClass>org.pty4j.AppMain</mainClass>
+                            <mainClass>com.pty4j.AppMain</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
