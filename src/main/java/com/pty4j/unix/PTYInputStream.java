@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2000, 2011 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -12,17 +12,19 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PTYInputStream extends InputStream {
-    private Pty myPty;
+    Pty myPty;
 
-    PTYInputStream(Pty pty) {
+    public PTYInputStream(Pty pty) {
         myPty = pty;
     }
 
     /**
      * Implementation of read for the InputStream.
+     *
+     * @throws java.io.IOException on error.
      */
     @Override
-    public int read() {
+    public int read() throws IOException {
         byte b[] = new byte[1];
         if (1 != read(b, 0, 1)) {
             return -1;
@@ -30,9 +32,8 @@ public class PTYInputStream extends InputStream {
         return b[0];
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
-    public int read(byte[] buf, int off, int len) {
+    public int read(byte[] buf, int off, int len) throws IOException {
         if (buf == null) {
             throw new NullPointerException();
         }

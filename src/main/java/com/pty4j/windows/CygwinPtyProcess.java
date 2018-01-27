@@ -2,10 +2,10 @@ package com.pty4j.windows;
 
 import com.pty4j.PtyProcess;
 import com.pty4j.WinSize;
+import com.pty4j.util.PtyUtil;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
-import com.pty4j.util.PtyUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.pty4j.windows.WinPty.KERNEL32;
 
 public class CygwinPtyProcess extends PtyProcess {
     private static final int CONNECT_PIPE_TIMEOUT = 1000;
@@ -32,15 +34,15 @@ public class CygwinPtyProcess extends PtyProcess {
 
     public CygwinPtyProcess(String[] command, Map<String, String> environment, String workingDirectory, File logFile, boolean console)
             throws IOException {
-        String pipePrefix = String.format("\\\\.\\pipe\\cygwinpty-%d-%d-", WinPty.KERNEL32.GetCurrentProcessId(), processCounter.getAndIncrement());
+        String pipePrefix = String.format("\\\\.\\pipe\\cygwinpty-%d-%d-", KERNEL32.GetCurrentProcessId(), processCounter.getAndIncrement());
         String inPipeName = pipePrefix + "in";
         String outPipeName = pipePrefix + "out";
         String errPipeName = pipePrefix + "err";
 
-        myInputHandle = WinPty.KERNEL32.CreateNamedPipeA(inPipeName, PIPE_ACCESS_OUTBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null);
-        myOutputHandle = WinPty.KERNEL32.CreateNamedPipeA(outPipeName, PIPE_ACCESS_INBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null);
+        myInputHandle = KERNEL32.CreateNamedPipeA(inPipeName, PIPE_ACCESS_OUTBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null);
+        myOutputHandle = KERNEL32.CreateNamedPipeA(outPipeName, PIPE_ACCESS_INBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null);
         myErrorHandle =
-                console ? WinPty.KERNEL32.CreateNamedPipeA(errPipeName, PIPE_ACCESS_INBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null) : null;
+                console ? KERNEL32.CreateNamedPipeA(errPipeName, PIPE_ACCESS_INBOUND | WinNT.FILE_FLAG_OVERLAPPED, 0, 1, 0, 0, 0, null) : null;
 
         if (myInputHandle == WinBase.INVALID_HANDLE_VALUE ||
                 myOutputHandle == WinBase.INVALID_HANDLE_VALUE ||
@@ -91,35 +93,39 @@ public class CygwinPtyProcess extends PtyProcess {
             throw e;
         }
 
-        new Thread(() -> {
-            while (true) {
-                try {
-                    process.waitFor();
-                    break;
-                } catch (InterruptedException ignore) {
+        new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        process.waitFor();
+                        break;
+                    } catch (InterruptedException ignore) {
+                    }
                 }
+
+                closeHandles();
             }
-            closeHandles();
-        }).start();
+        }.start();
 
         return process;
     }
 
     private static void waitForPipe(WinNT.HANDLE handle) throws IOException {
-        WinNT.HANDLE connectEvent = WinPty.KERNEL32.CreateEventA(null, true, false, null);
+        WinNT.HANDLE connectEvent = KERNEL32.CreateEventA(null, true, false, null);
 
         WinBase.OVERLAPPED povl = new WinBase.OVERLAPPED();
         povl.hEvent = connectEvent;
 
-        boolean success = WinPty.KERNEL32.ConnectNamedPipe(handle, povl);
+        boolean success = KERNEL32.ConnectNamedPipe(handle, povl);
         if (!success) {
-            switch (WinPty.KERNEL32.GetLastError()) {
+            switch (KERNEL32.GetLastError()) {
                 case WinError.ERROR_PIPE_CONNECTED:
                     success = true;
                     break;
                 case WinError.ERROR_IO_PENDING:
-                    if (WinPty.KERNEL32.WaitForSingleObject(connectEvent, CONNECT_PIPE_TIMEOUT) != WinBase.WAIT_OBJECT_0) {
-                        WinPty.KERNEL32.CancelIo(handle);
+                    if (KERNEL32.WaitForSingleObject(connectEvent, CONNECT_PIPE_TIMEOUT) != WinBase.WAIT_OBJECT_0) {
+                        KERNEL32.CancelIo(handle);
 
                         success = false;
                     } else {
@@ -130,7 +136,7 @@ public class CygwinPtyProcess extends PtyProcess {
             }
         }
 
-        WinPty.KERNEL32.CloseHandle(connectEvent);
+        KERNEL32.CloseHandle(connectEvent);
 
         if (!success) throw new IOException("Cannot connect to a named pipe");
     }
@@ -151,14 +157,8 @@ public class CygwinPtyProcess extends PtyProcess {
     }
 
     @Override
-    public WinSize getWinSize() {
+    public WinSize getWinSize() throws IOException {
         throw new RuntimeException("Not implemented");
-    }
-
-    @Override
-    public int getPid() {
-        // TODO: Dont know yet how to get pid. Need to test on Windows.
-        return -1;
     }
 
     @Override
@@ -176,7 +176,7 @@ public class CygwinPtyProcess extends PtyProcess {
         if (myErrorPipe == null) {
             return new InputStream() {
                 @Override
-                public int read() {
+                public int read() throws IOException {
                     return -1;
                 }
             };
@@ -200,8 +200,8 @@ public class CygwinPtyProcess extends PtyProcess {
     }
 
     private void closeHandles() {
-        WinPty.KERNEL32.CloseHandle(myInputHandle);
-        WinPty.KERNEL32.CloseHandle(myOutputHandle);
-        if (myErrorHandle != null) WinPty.KERNEL32.CloseHandle(myErrorHandle);
+        KERNEL32.CloseHandle(myInputHandle);
+        KERNEL32.CloseHandle(myOutputHandle);
+        if (myErrorHandle != null) KERNEL32.CloseHandle(myErrorHandle);
     }
 }

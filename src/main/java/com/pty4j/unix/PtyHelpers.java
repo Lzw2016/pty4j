@@ -22,16 +22,14 @@ package com.pty4j.unix;
 
 
 import com.google.common.collect.Lists;
-import com.pty4j.unix.macosx.OSFacadeImpl;
+import com.pty4j.WinSize;
+import com.pty4j.util.PtyUtil;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
 import com.sun.jna.Structure;
 import jtermios.JTermios;
 import jtermios.Termios;
-import com.pty4j.WinSize;
-import com.pty4j.util.PtyUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.Arrays;
@@ -42,14 +40,13 @@ import java.util.List;
  * Provides access to the pseudoterminal functionality on POSIX(-like) systems,
  * emulating such system calls on non POSIX systems.
  */
-@SuppressWarnings("WeakerAccess")
 public class PtyHelpers {
-    private static final Logger LOG = LoggerFactory.getLogger(PtyHelpers.class);
+    private static final Logger LOG = Logger.getLogger(PtyHelpers.class);
 
     /**
      * Provides a OS-specific interface to the PtyHelpers methods.
      */
-    public interface OSFacade {
+    public static interface OSFacade {
         /**
          * Transforms the calling process into a new process.
          *
@@ -63,7 +60,7 @@ public class PtyHelpers {
 
         /**
          * Returns the window size information for the process with the given FD and
-         * stores the results in the given {@link WinSize} structure.
+         * stores the results in the given {@link com.pty4j.WinSize} structure.
          *
          * @param fd the FD of the process to query;
          * @param ws the WinSize structure to store the results into.
@@ -201,7 +198,7 @@ public class PtyHelpers {
 
     static {
         if (Platform.isMac()) {
-            myOsFacade = new OSFacadeImpl();
+            myOsFacade = new com.pty4j.unix.macosx.OSFacadeImpl();
         } else if (Platform.isFreeBSD()) {
             myOsFacade = new com.pty4j.unix.freebsd.OSFacadeImpl();
         } else if (Platform.isOpenBSD()) {
@@ -240,8 +237,8 @@ public class PtyHelpers {
     public static Termios createTermios() {
         Termios term = new Termios();
 
-//        boolean isUTF8 = true;
-        term.c_iflag = JTermios.ICRNL | JTermios.IXON | JTermios.IXANY | IMAXBEL | JTermios.BRKINT | IUTF8;
+        boolean isUTF8 = true;
+        term.c_iflag = JTermios.ICRNL | JTermios.IXON | JTermios.IXANY | IMAXBEL | JTermios.BRKINT | (isUTF8 ? IUTF8 : 0);
         term.c_oflag = JTermios.OPOST | ONLCR;
         term.c_cflag = JTermios.CREAD | JTermios.CS8 | HUPCL;
         term.c_lflag = JTermios.ICANON | JTermios.ISIG | JTermios.IEXTEN | JTermios.ECHO | JTermios.ECHOE | ECHOK | ECHOKE | ECHOCTL;
@@ -336,7 +333,7 @@ public class PtyHelpers {
      *                stored;
      * @param options the bit mask with options.
      */
-    private static int waitpid(int pid, int[] stat, int options) {
+    public static int waitpid(int pid, int[] stat, int options) {
         return myOsFacade.waitpid(pid, stat, options);
     }
 
@@ -410,7 +407,7 @@ public class PtyHelpers {
         public short ws_ypixel;
 
         @Override
-        protected List<String> getFieldOrder() {
+        protected List getFieldOrder() {
             return Lists.newArrayList("ws_row", "ws_col", "ws_xpixel", "ws_ypixel");
         }
 

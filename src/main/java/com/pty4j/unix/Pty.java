@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2002, 2010 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -7,11 +7,11 @@
  *******************************************************************************/
 package com.pty4j.unix;
 
+import com.pty4j.WinSize;
+import com.pty4j.util.Pair;
 import jtermios.FDSet;
 import jtermios.JTermios;
 import jtermios.Termios;
-import com.pty4j.WinSize;
-import com.pty4j.util.Pair;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -39,7 +39,7 @@ public class Pty {
         if (System.getProperty("os.name").toLowerCase(Locale.US).startsWith("mac")) {
             String version = System.getProperty("os.version").toLowerCase(Locale.US);
             String[] strings = version.split("\\.");
-            return strings.length > 1 && strings[0].equals("10") && Integer.valueOf(strings[1]) <= 6;
+            if (strings.length > 1 && strings[0].equals("10") && Integer.valueOf(strings[1]) <= 6) return true;
         }
         return false;
     }
@@ -124,7 +124,7 @@ public class Pty {
     /**
      * Returns the current window size of this Pty.
      *
-     * @return a {@link WinSize} instance with information about the master side
+     * @return a {@link com.pty4j.WinSize} instance with information about the master side
      * of the Pty, never <code>null</code>.
      * @throws IOException in case obtaining the window size failed.
      */
@@ -249,7 +249,7 @@ public class Pty {
         super.finalize();
     }
 
-    private int close0(int fd) {
+    private int close0(int fd) throws IOException {
         int ret = JTermios.close(fd);
 
         breakRead();
@@ -293,19 +293,19 @@ public class Pty {
         return status[0];
     }
 
-    private static int WEXITSTATUS(int status) {
+    static int WEXITSTATUS(int status) {
         return (status >> 8) & 0x000000ff;
     }
 
-    private static boolean WIFEXITED(int status) {
+    static boolean WIFEXITED(int status) {
         return _WSTATUS(status) == 0;
     }
 
     private static int _WSTATUS(int status) {
-        return status & 127;
+        return status & 0177;
     }
 
-    int read(byte[] buf, int len) {
+    int read(byte[] buf, int len) throws IOException {
         int fd = myMaster;
         if (fd == -1) return -1;
 
@@ -341,7 +341,8 @@ public class Pty {
         return JTermios.FD_ISSET(fd, set);
     }
 
-    int write(byte[] buf, int len) {
+    int write(byte[] buf, int len) throws IOException {
         return JTermios.write(myMaster, buf, len);
     }
+
 }

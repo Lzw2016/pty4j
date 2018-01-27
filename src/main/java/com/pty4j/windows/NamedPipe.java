@@ -9,12 +9,12 @@ import com.sun.jna.ptr.IntByReference;
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com.sun.jna.platform.win32.WinBase.INVALID_HANDLE_VALUE;
 import static com.pty4j.windows.WinPty.KERNEL32;
+import static com.sun.jna.platform.win32.WinBase.INVALID_HANDLE_VALUE;
 
 public class NamedPipe {
     private WinNT.HANDLE myHandle;
-    private boolean myCloseHandleOnFinalize;
+    boolean myCloseHandleOnFinalize;
 
     private WinNT.HANDLE shutdownEvent;
     private volatile boolean shutdownFlag = false;
@@ -44,7 +44,7 @@ public class NamedPipe {
      * do not own the handle, call markClosed instead of close, or call the Win32
      * DuplicateHandle API to get a new handle.
      */
-    NamedPipe(WinNT.HANDLE handle, boolean closeHandleOnFinalize) {
+    public NamedPipe(WinNT.HANDLE handle, boolean closeHandleOnFinalize) {
         myHandle = handle;
         myCloseHandleOnFinalize = closeHandleOnFinalize;
         shutdownEvent = Kernel32.INSTANCE.CreateEvent(null, true, false, null);

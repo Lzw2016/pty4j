@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2000, 2011 QNX Software Systems and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,13 +11,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class WinPTYOutputStream extends OutputStream {
-    @SuppressWarnings("FieldCanBeLocal")
     private final WinPty myWinPty;
     private final NamedPipe myNamedPipe;
     private final boolean myPatchNewline;
     private final boolean mySendEOF;
 
-    WinPTYOutputStream(WinPty winPty, NamedPipe namedPipe, boolean patchNewline, boolean sendEOF) {
+    public WinPTYOutputStream(WinPty winPty, NamedPipe namedPipe, boolean patchNewline, boolean sendEOF) {
         // Keep a reference to WinPty to prevent it from being finalized as long as
         // the WinPTYOutputStream object is alive.
         myWinPty = winPty;
@@ -26,9 +25,8 @@ public class WinPTYOutputStream extends OutputStream {
         mySendEOF = sendEOF;
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
-    public void write(byte[] b, int off, int len) {
+    public void write(byte[] b, int off, int len) throws IOException {
         if (b == null) {
             throw new NullPointerException();
         }
@@ -55,7 +53,7 @@ public class WinPTYOutputStream extends OutputStream {
     }
 
     @Override
-    public void write(int b) {
+    public void write(int b) throws IOException {
         byte[] buf = new byte[1];
         buf[0] = (byte) b;
         write(buf, 0, 1);

@@ -21,6 +21,7 @@
 package com.pty4j.unix.freebsd;
 
 
+import com.pty4j.WinSize;
 import com.pty4j.unix.PtyHelpers;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -28,15 +29,14 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.StringArray;
 import com.sun.jna.ptr.IntByReference;
 import jtermios.JTermios;
-import com.pty4j.WinSize;
 
 
 /**
  * Provides a {@link PtyHelpers.OSFacade} implementation for FreeBSD.
  */
 public class OSFacadeImpl implements PtyHelpers.OSFacade {
-
     // INNER TYPES
+
     public interface FreeBSD_C_lib extends Library {
         int posix_openpt(int oflag);
 
@@ -90,10 +90,12 @@ public class OSFacadeImpl implements PtyHelpers.OSFacade {
     }
 
     // CONSTANTS
+
     private static final long TIOCGWINSZ = 0x40087468L;
     private static final long TIOCSWINSZ = 0x80087467L;
 
     // VARIABLES
+
     private static FreeBSD_C_lib m_Clib = (FreeBSD_C_lib) Native.loadLibrary("c", FreeBSD_C_lib.class);
     private static FreeBSD_Util_lib m_Utillib = (FreeBSD_Util_lib) Native.loadLibrary("util", FreeBSD_Util_lib.class);
 
@@ -126,15 +128,16 @@ public class OSFacadeImpl implements PtyHelpers.OSFacade {
         return m_Clib.execve(command, argvp, envp);
     }
 
-    @SuppressWarnings("Duplicates")
     @Override
     public int getWinSize(int fd, WinSize winSize) {
         int r;
+
         PtyHelpers.winsize ws = new PtyHelpers.winsize();
         if ((r = m_Clib.ioctl(fd, new NativeLong(TIOCGWINSZ), ws)) < 0) {
             return r;
         }
         ws.update(winSize);
+
         return r;
     }
 

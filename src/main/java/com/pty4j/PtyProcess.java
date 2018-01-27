@@ -2,11 +2,11 @@ package com.pty4j;
 
 import com.pty4j.unix.Pty;
 import com.pty4j.unix.UnixPtyProcess;
-import com.sun.jna.Platform;
-import com.sun.jna.platform.win32.Advapi32Util;
 import com.pty4j.util.PtyUtil;
 import com.pty4j.windows.CygwinPtyProcess;
 import com.pty4j.windows.WinPtyProcess;
+import com.sun.jna.Platform;
+import com.sun.jna.platform.win32.Advapi32Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,15 +32,12 @@ import java.util.TreeMap;
  *
  * @author traff
  */
-@SuppressWarnings("WeakerAccess")
 public abstract class PtyProcess extends Process {
     public abstract boolean isRunning();
 
     public abstract void setWinSize(WinSize winSize);
 
     public abstract WinSize getWinSize() throws IOException;
-
-    public abstract int getPid();
 
     public static PtyProcess exec(String[] command) throws IOException {
         return exec(command, (Map<String, String>) null);
@@ -67,14 +64,16 @@ public abstract class PtyProcess extends Process {
         return new UnixPtyProcess(command, environment, workingDirectory, new Pty(console), console ? new Pty() : null);
     }
 
-    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console) throws IOException {
+    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console)
+            throws IOException {
         return exec(command, environment, workingDirectory, console, false, null);
     }
 
-    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console, boolean cygwin, File logFile) throws IOException {
+    public static PtyProcess exec(String[] command, Map<String, String> environment, String workingDirectory, boolean console, boolean cygwin,
+                                  File logFile) throws IOException {
         if (Platform.isWindows()) {
             if (environment == null) {
-                environment = new TreeMap<>();
+                environment = new TreeMap<String, String>();
             }
             if (cygwin) {
                 return new CygwinPtyProcess(command, environment, workingDirectory, logFile, console);

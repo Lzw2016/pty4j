@@ -2,6 +2,7 @@ package com.pty4j.windows;
 
 import com.pty4j.PtyException;
 import com.pty4j.WinSize;
+import com.pty4j.util.PtyUtil;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -11,7 +12,6 @@ import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import com.pty4j.util.PtyUtil;
 
 import java.io.IOException;
 
@@ -25,7 +25,7 @@ import static com.sun.jna.platform.win32.WinNT.GENERIC_WRITE;
 public class WinPty {
     private Pointer myWinpty;
 
-    private WinNT.HANDLE myProcess;
+    private WinNT.HANDLE myProcess = null;
     private NamedPipe myConinPipe;
     private NamedPipe myConoutPipe;
     private NamedPipe myConerrPipe;
@@ -34,9 +34,9 @@ public class WinPty {
     private int myStatus = -1;
     private boolean myClosed = false;
 
-    private int openInputStreamCount;
+    private int openInputStreamCount = 0;
 
-    WinPty(String cmdline, String cwd, String env, boolean consoleMode) throws PtyException, IOException {
+    public WinPty(String cmdline, String cwd, String env, boolean consoleMode) throws PtyException, IOException {
         int cols = Integer.getInteger("win.pty.cols", 80);
         int rows = Integer.getInteger("win.pty.rows", 25);
 
@@ -131,7 +131,6 @@ public class WinPty {
                 pipe.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -254,7 +253,7 @@ public class WinPty {
         }
     }
 
-    static final Kern32 KERNEL32 = (Kern32) Native.loadLibrary("kernel32", Kern32.class);
+    public static final Kern32 KERNEL32 = (Kern32) Native.loadLibrary("kernel32", Kern32.class);
 
     interface Kern32 extends Library {
         boolean PeekNamedPipe(WinNT.HANDLE hFile,
@@ -294,7 +293,7 @@ public class WinPty {
         int GetCurrentProcessId();
     }
 
-    private static WinPtyLib INSTANCE = (WinPtyLib) Native.loadLibrary(getLibraryPath(), WinPtyLib.class);
+    public static WinPtyLib INSTANCE = (WinPtyLib) Native.loadLibrary(getLibraryPath(), WinPtyLib.class);
 
     private static String getLibraryPath() {
         try {

@@ -21,16 +21,16 @@
 package com.pty4j.unix.macosx;
 
 
+import com.pty4j.WinSize;
+import com.pty4j.unix.PtyHelpers;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.StringArray;
 import jtermios.JTermios;
-import com.pty4j.WinSize;
-import com.pty4j.unix.PtyHelpers;
 
 
 /**
- * Provides a {@link PtyHelpers.OSFacade} implementation for MacOSX.
+ * Provides a {@link com.pty4j.unix.PtyHelpers.OSFacade} implementation for MacOSX.
  */
 public class OSFacadeImpl implements PtyHelpers.OSFacade {
     // INNER TYPES
@@ -119,15 +119,16 @@ public class OSFacadeImpl implements PtyHelpers.OSFacade {
         return m_Clib.execve(command, argvp, envp);
     }
 
-    @SuppressWarnings("Duplicates")
     @Override
     public int getWinSize(int fd, WinSize winSize) {
         int r;
+
         PtyHelpers.winsize ws = new PtyHelpers.winsize();
         if ((r = m_Clib.ioctl(fd, new NativeLong(TIOCGWINSZ), ws)) < 0) {
             return r;
         }
         ws.update(winSize);
+
         return r;
     }
 
