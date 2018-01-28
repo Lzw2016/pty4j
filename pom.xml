@@ -19,11 +19,18 @@
             <id>sparetimelabs</id>
             <url>http://www.sparetimelabs.com/maven2/</url>
         </repository>
+    </repositories>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>my-maven-snapshots</id>
+            <url>http://39.108.68.132:8081/repository/maven-snapshots/</url>
+        </snapshotRepository>
         <repository>
             <id>my-maven-releases</id>
             <url>http://39.108.68.132:8081/repository/maven-releases/</url>
         </repository>
-    </repositories>
+    </distributionManagement>
 
     <properties>
         <downloadSources>true</downloadSources>
